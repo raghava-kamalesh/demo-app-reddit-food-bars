@@ -104,6 +104,34 @@
       filter: brightness(1.05);
     }
 
+    .theme-select {
+      appearance: none;
+      border: 1px solid var(--card-border);
+      background: var(--card);
+      color: var(--fg);
+      font: inherit;
+      font-weight: 600;
+      padding: 0.55rem 2.25rem 0.55rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: border-color 0.12s ease, background 0.12s ease;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2326251e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1rem;
+    }
+
+    .theme-select:hover {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--card-border));
+      background-color: #fff;
+    }
+
+    .theme-select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
     .board {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -235,6 +263,16 @@
   <p class="sub">Flip two cards at a time. Match every pair to win.</p>
 
   <div class="toolbar" aria-label="Game controls">
+    <label class="stat" for="theme-select">
+      Theme:
+      <select id="theme-select" class="theme-select">
+        <option value="food">Food</option>
+        <option value="animals">Animals</option>
+        <option value="cars">Cars</option>
+        <option value="flags">Country Flags</option>
+        <option value="sports">Sports</option>
+      </select>
+    </label>
     <span class="stat">Moves: <strong id="moves">0</strong></span>
     <span class="stat">Time: <strong id="time">0:00</strong></span>
     <button type="button" class="btn primary" id="new-game">New game</button>
@@ -253,15 +291,40 @@
   </div>
 
   <script>
-    const PAIRS = [
-      '\u{1F355}', '\u{1F354}', '\u{1F363}', '\u{1F35C}',
-      '\u{1F957}', '\u{1F370}', '\u{2615}', '\u{1F9CB}',
-    ];
+    const THEMES = {
+      food: [
+        '\u{1F355}', '\u{1F354}', '\u{1F363}', '\u{1F35C}',
+        '\u{1F957}', '\u{1F370}', '\u{2615}', '\u{1F9CB}',
+      ],
+      animals: [
+        '\u{1F981}', '\u{1F98A}', '\u{1F43C}', '\u{1F427}',
+        '\u{1F98B}', '\u{1F422}', '\u{1F419}', '\u{1F98E}',
+      ],
+      cars: [
+        '\u{1F697}', '\u{1F699}', '\u{1F68C}', '\u{1F3CE}',
+        '\u{1F695}', '\u{1F6FB}', '\u{1F69A}', '\u{1F3CD}',
+      ],
+      flags: [
+        '\u{1F1FA}\u{1F1F8}', '\u{1F1EC}\u{1F1E7}', '\u{1F1EF}\u{1F1F5}', '\u{1F1E7}\u{1F1F7}',
+        '\u{1F1E8}\u{1F1E6}', '\u{1F1E6}\u{1F1FA}', '\u{1F1EB}\u{1F1F7}', '\u{1F1E9}\u{1F1EA}',
+      ],
+      sports: [
+        '\u{26BD}', '\u{1F3C0}', '\u{1F3C8}', '\u{26BE}',
+        '\u{1F3BE}', '\u{1F3D2}', '\u{1F3F8}', '\u{1F3B3}',
+      ],
+    };
+
+    let currentTheme = 'food';
+
+    function getPairs() {
+      return THEMES[currentTheme] || THEMES.food;
+    }
 
     const boardEl = document.getElementById('board');
     const movesEl = document.getElementById('moves');
     const timeEl = document.getElementById('time');
     const newGameBtn = document.getElementById('new-game');
+    const themeSelect = document.getElementById('theme-select');
     const overlayEl = document.getElementById('win-overlay');
     const winStatsEl = document.getElementById('win-stats');
     const playAgainBtn = document.getElementById('play-again');
@@ -375,8 +438,9 @@
     }
 
     function buildDeck() {
+      const pairs = getPairs();
       const deck = shuffle(
-        PAIRS.flatMap((emoji, i) => [
+        pairs.flatMap((emoji, i) => [
           { pairId: i, emoji },
           { pairId: i, emoji },
         ])
@@ -485,6 +549,10 @@
 
     newGameBtn.addEventListener('click', resetGame);
     playAgainBtn.addEventListener('click', resetGame);
+    themeSelect.addEventListener('change', (e) => {
+      currentTheme = e.target.value;
+      resetGame();
+    });
 
     overlayEl.addEventListener('click', (e) => {
       if (e.target === overlayEl) hideWin();
